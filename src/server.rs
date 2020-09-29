@@ -35,7 +35,9 @@ impl Server {
 
     pub fn run(self, mut handler: impl HttpHandler) {
 
-        println!("Listening on: {}", self.addr );
+
+        println!("\nListening on: {}", self.addr);
+        println!("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
         let tcp_listener = TcpListener::bind(&self.addr).unwrap();
 
@@ -45,7 +47,9 @@ impl Server {
 
                 Ok((mut tcp_stream, addr)) => {
 
-                    println!("new client: {:?}", addr);
+                    println!("================================");
+                    println!("New client: {}", addr);
+                    println!("================================");
         
                     // not recommended way for production
                     // okay for an example such as this
@@ -55,7 +59,7 @@ impl Server {
 
                         Ok(_) => {
 
-                            println!("Received a request: {}", String::from_utf8_lossy(&buffer));
+                            println!("\tReceived a request\n{}", String::from_utf8_lossy(&buffer));
 
                             // [..] === slice contains the entire array 
                             let response = match Request::try_from(&buffer[..]) {

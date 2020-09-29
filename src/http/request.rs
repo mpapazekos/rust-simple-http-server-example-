@@ -1,6 +1,7 @@
 use super::Method;
 use super::ParseError;
 use super::QueryString;
+use super::HttpHeaderMap;
 
 use std::str;
 use std::convert::TryFrom;
@@ -11,9 +12,10 @@ use std::fmt::Debug;
 #[derive(Debug)]
 pub struct Request<'buf> {
 
+    method: Method,
     path: &'buf str,
     query_string: Option<QueryString<'buf>>,
-    method: Method
+    headers: HttpHeaderMap<'buf>
 }
 
 // =============================================================
@@ -24,6 +26,8 @@ impl<'buf> Request<'buf> {
 
     pub fn method(&self) -> &Method {&self.method}
 
+    pub fn http_headers(&self) -> &HttpHeaderMap { &self.headers }
+    
     pub fn query_string(&self) -> Option<&QueryString> {self.query_string.as_ref()}
 }
 
@@ -32,35 +36,57 @@ impl<'buf> TryFrom<&'buf [u8]> for Request<'buf> {
     type Error = ParseError;
 
     // example request:
-    // GET/ /search?name=abc&sort=1 HTTP/1.1\r\n...HEADERS...
+    // GET / /search?name=abc&sort=1 HTTP/1.1\r\n...HEADERS...
     fn try_from(buf: &'buf [u8]) -> Result<Self, Self::Error> {
 
         let request = str::from_utf8(buf)?;
 
-        let (method, request) = get_next_word(request).ok_or(ParseError::InvalidRequest)?;
-        let (mut path, request) = get_next_word(request).ok_or(ParseError::InvalidRequest)?;
-        let (protocol, _) = get_next_word(request).ok_or(ParseError::InvalidRequest)?;
+        // request breakdown
+        // -------------------
+        let (method, request)   = get_next_phrase(request).ok_or(ParseError::InvalidRequest)?;
+        let (mut path, request) = get_next_phrase(request).ok_or(ParseError::InvalidRequest)?;
+        let (protocol, request) = get_next_phrase(request).ok_or(ParseError::InvalidRequest)?;
+        let (_, request)        = get_next_phrase(request).ok_or(ParseError::InvalidRequest)?;
+
+        // check protocol
+        // -------------------
+        if protocol != "HTTP/1.1" {
+
+            return Err(ParseError::InvalidProtocol) 
+        }
         
-        if protocol != "HTTP/1.1" { return Err(ParseError::InvalidProtocol) }
-        
+        // check method 
+        // -------------------
         let method: Method = method.parse()?;
 
+        // check query string
+        // -------------------
         let mut query_string = None;
+
         if let Some(idx) = path.find('?') {
 
             query_string = Some(QueryString::from(&path[idx+1..]));
             path = &path[..idx];
         }  
-    
-        return Ok(Self {path, query_string, method})
+
+        // check http headers
+        // -------------------
+        let mut headers = HttpHeaderMap::default();
+
+        if let Some(idx) = request.find("\r\n\r\n") {
+
+            headers = HttpHeaderMap::from(&request[..idx]);       
+        }
+
+        return Ok(Self { method,path, query_string, headers})
     }
 }
 
-fn get_next_word(request: &str) -> Option<(&str, &str)> {
+fn get_next_phrase(request: &str) -> Option<(&str, &str)> {
 
     for (idx, ch) in request.chars().enumerate() {
 
-        if ch == ' ' || ch == '\r'  
+        if ch == ' ' || ch == '\r' || ch == '\n' 
         { return Some((&request[..idx], &request[idx+1..])) } 
     }
 

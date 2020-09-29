@@ -1,3 +1,5 @@
+use super::utils::MapValueType;
+
 use std::collections::HashMap;
 
 #[derive(Debug)]
@@ -6,12 +8,7 @@ pub struct QueryString<'buf> {
     data: HashMap<&'buf str, MapValueType<'buf>>
 }
 
-#[derive(Debug)]
-pub enum MapValueType<'buf> {
-
-    Single(&'buf str), 
-    Multiple(Vec<&'buf str>)
-}
+//==================================================
 
 impl<'buf> QueryString<'buf> {
 
@@ -48,6 +45,6 @@ impl<'buf> From<&'buf str> for QueryString<'buf> {
                 .or_insert(MapValueType::Single(value));
         } 
 
-      return QueryString{data} 
+        return QueryString{data} 
     }
 }

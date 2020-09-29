@@ -29,11 +29,11 @@ impl WebSiteHandler {
 
                 if path.starts_with(&self.public_path) {
 
-                    fs::read_to_string(path).ok()
+                    return fs::read_to_string(path).ok()
                 }
                 else {
                     println!("Directory Traversal Attack Attempted: {}", filepath);
-                    None
+                    return None
                 }
             }
             
@@ -46,6 +46,8 @@ impl WebSiteHandler {
 impl HttpHandler for WebSiteHandler {
 
     fn handle_request(&mut self, request: &Request) -> Response {
+
+        dbg!(request);
 
         match request.method() { 
             
