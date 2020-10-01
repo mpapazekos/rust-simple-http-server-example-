@@ -1,7 +1,10 @@
-use super::server::HttpHandler;
+use super::utils::HttpHandler;
 use super::http::{Request, Response, StatusCode, Method};
 
 use std::fs;
+use std::io::Read;
+use std::convert::TryFrom;
+use std::net::TcpStream;
 
 // =========================================================================
 
@@ -44,6 +47,37 @@ impl WebSiteHandler {
 
 
 impl HttpHandler for WebSiteHandler {
+
+    fn handle_connection(&mut self, mut stream: TcpStream) {
+
+        // not recommended way for production
+        // okay for an example such as this
+        let mut buffer = [0; 1024];
+    
+        match stream.read(&mut buffer) {
+    
+            Ok(_) => {
+    
+                println!("\tReceived a request\n{}", String::from_utf8_lossy(&buffer));
+    
+                // [..] === slice contains the entire array 
+                let response = match Request::try_from(&buffer[..]) {
+    
+                    Ok(request) =>  self.handle_request(&request),
+                         
+                    Err(e) => self.handle_bad_request(&e)
+                };
+    
+                // Send the response and print msg in case operation fails
+                if let Err(e) = response.send(&mut stream) {
+                    
+                    println!("Error: failed to send response {}", e)
+                }
+            }
+    
+            Err(e) => println!("Error: failed to read from connection {}",e)
+        }     
+    }
 
     fn handle_request(&mut self, request: &Request) -> Response {
 

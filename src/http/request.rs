@@ -15,7 +15,7 @@ pub struct Request<'buf> {
     method: Method,
     path: &'buf str,
     query_string: Option<QueryString<'buf>>,
-    headers: HttpHeaderMap<'buf>
+    headers: Option<HttpHeaderMap<'buf>>
 }
 
 // =============================================================
@@ -26,7 +26,7 @@ impl<'buf> Request<'buf> {
 
     pub fn method(&self) -> &Method {&self.method}
 
-    pub fn http_headers(&self) -> &HttpHeaderMap { &self.headers }
+    pub fn http_headers(&self) -> Option<&HttpHeaderMap> { self.headers.as_ref()}
     
     pub fn query_string(&self) -> Option<&QueryString> {self.query_string.as_ref()}
 }
@@ -59,7 +59,7 @@ impl<'buf> TryFrom<&'buf [u8]> for Request<'buf> {
         // -------------------
         let method: Method = method.parse()?;
 
-        // check query string
+        // check path and query string
         // -------------------
         let mut query_string = None;
 
@@ -71,14 +71,14 @@ impl<'buf> TryFrom<&'buf [u8]> for Request<'buf> {
 
         // check http headers
         // -------------------
-        let mut headers = HttpHeaderMap::default();
+        let mut headers = None;
 
         if let Some(idx) = request.find("\r\n\r\n") {
 
-            headers = HttpHeaderMap::from(&request[..idx]);       
+            headers = Some(HttpHeaderMap::from(&request[..idx]));
         }
 
-        return Ok(Self { method,path, query_string, headers})
+        return Ok(Self {method, path, query_string, headers})
     }
 }
 

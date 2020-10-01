@@ -1,4 +1,4 @@
-use super::utils::MapValueType;
+use crate::utils::MapValueType;
 
 use std::collections::HashMap;
 
