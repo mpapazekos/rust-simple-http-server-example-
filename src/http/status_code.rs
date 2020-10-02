@@ -3,9 +3,9 @@ use std::fmt::{ Debug, Display, Formatter, Result as FmtResult};
 #[derive(Debug, Copy, Clone)]
 pub enum StatusCode {
 
-    OK = 200,
-    BAD_REQUEST = 400,
-    NOT_FOUND = 404
+    Ok = 200,
+    BadRequest = 400,
+    NotFound = 404
 }
 
 impl StatusCode {
@@ -14,9 +14,9 @@ impl StatusCode {
 
         match self {
             
-            StatusCode::OK => "Ok",
-            StatusCode::BAD_REQUEST => "Bad Request",
-            StatusCode::NOT_FOUND => "Not Found",
+            StatusCode::Ok => "Ok",
+            StatusCode::BadRequest => "Bad Request",
+            StatusCode::NotFound => "Not Found",
         }
     }
 }

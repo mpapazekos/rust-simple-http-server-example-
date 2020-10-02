@@ -1,7 +1,7 @@
 use super::StatusCode;
 
 use std::io::{Write, Result as IOResult};
-use std::fmt::{ Debug, Display, Formatter, Result as FmtResult};
+use std::fmt::Debug;
 
 // =============================================================
 

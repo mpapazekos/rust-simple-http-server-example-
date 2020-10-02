@@ -84,13 +84,13 @@ impl ThreadPool {
 
     /// Send a new mission to workers
     /// 
-    /// The func is a closure which contains the mission details
+    /// The func argument is a closure which contains the mission details
     /// 
     /// # Panics!
     /// 
     /// The 'execute' function will panic if the receiving end
     /// of the channel could not be found
-    pub fn execute<F>(&self, func: F) 
+    pub fn assign_mission<F>(&self, func: F) 
     where F: FnOnce() + Send + 'static {
 
         let mission = Box::new(func);
